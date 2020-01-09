@@ -1,13 +1,16 @@
 unsigned long toRpm(unsigned long pulseTime) {
-  return 60/(pulseTime*0.002);
+  if(pulseTime < 15000) return 0;
+  return 60000/(pulseTime*0.002);
 }
 
 unsigned long pulseTime;
+unsigned long lastInterrupt;
 
 void isr() {
   static unsigned long start = 0;
-  if(!digitalRead(2)) start = millis();
-  if(digitalRead(2)) pulseTime = millis()-start;
+  if(!digitalRead(2)) start = micros();
+  if(digitalRead(2)) pulseTime = micros()-start;
+  lastInterrupt = millis();
 }
 
 void setup() {
@@ -17,5 +20,6 @@ void setup() {
 }
 
 void loop() {
+  if(lastInterrupt + 1000 < millis()) pulseTime = 0;
   Serial.println(toRpm(pulseTime));
 }
