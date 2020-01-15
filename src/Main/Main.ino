@@ -1,6 +1,11 @@
 #define FANPIN 2
 #define TEMPSENSORIN A0
 #define TEMPSENSORVCC 4
+#define POTMETERPIN A1
+
+unsigned int getPotmeterValue() {
+  return analogRead(POTMETERPIN);
+}
 
 unsigned long toRpm(unsigned long pulseTime) {
   if(pulseTime < 15000) return 0;
@@ -34,14 +39,17 @@ void isr() {
 }
 
 void setup() {
+  pinMode(7, OUTPUT);
+  digitalWrite(7, 1);
   attachInterrupt(digitalPinToInterrupt(FANPIN), isr, CHANGE);
   pinMode(TEMPSENSORIN, INPUT);
   pinMode(TEMPSENSORVCC, OUTPUT);
   pinMode(FANPIN, INPUT_PULLUP);
+  pinMode(POTMETERPIN, INPUT);
   Serial.begin(9600);
 }
 
 void loop() {
   if(lastInterrupt + 1000 < millis()) pulseTime = 0;
-  Serial.println("fan rpm: " + (String)toRpm(pulseTime) + " temperature: " + (String)readTemp());
+  Serial.println("fan rpm: " + (String)toRpm(pulseTime) + " temperature: " + (String)readTemp() + " potmeter: " + (String)getPotmeterValue());
 }
