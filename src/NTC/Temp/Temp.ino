@@ -1,8 +1,8 @@
 #define NTCPin A0
 const int vout;
-//als er een weerstand van 100k word aangesloten
-//moet deze r1 hier 10000 als je een weerstand van 15k neemt
-//moet het variable gedeelt door 10 anders komen er rare waardes uit
+//als er een weerstand van 100k wordt aangesloten
+//moet r1 10000 zijn als je een weerstand van 15k neemt
+//moet r1 gedeelt door 10 anders komen er rare waardes uit
 const float R1 = 10000;
 float logR2, R2, T, Tc, Tf;
 //Steinhart–Hart coefficients
@@ -14,7 +14,7 @@ Serial.begin(9600);
 
 void loop() {
 
-  vout = analogRead(ThermistorPin);
+  vout = analogRead(NTCPin);
   R2 = R1 * (1023.0 / (float)vout - 1.0);
   
   logR2 = log(R2);
@@ -29,7 +29,6 @@ void loop() {
   Serial.print(R2);
   Serial.print(" C: ");
   Serial.print(Tc);
-  Serial.println(" C");   
-
+  
   delay(500);
 }
