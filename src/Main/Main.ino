@@ -10,7 +10,7 @@
 
 unsigned int getPotmeterTemp() {
   // TO DO: calibrate
-  return analogRead(POTMETER_PIN);
+  return analogRead(POTMETER_PIN) / 10;
 }
 
 unsigned long toRpm(unsigned long pulseTime) {
@@ -30,8 +30,7 @@ int readTemp() {
   return temp;
 }
 
-unsigned long pulseTime;
-unsigned long lastInterrupt;
+unsigned long pulseTime, lastInterrupt, lcdRefreshTime = 0;
 char lcdBuffer[2][16];
 LiquidCrystal_I2C lcd(0x38, 16, 2);
 
@@ -59,14 +58,17 @@ void loop() {
   #ifdef DEBUG
     Serial.println("fan rpm: " + (String)toRpm(pulseTime) + " temperature: " + (String)readTemp() + " potmeter: " + (String)getPotmeterTemp());
   #endif
-  
-  snprintf(lcdBuffer[0], 16, "cur. temp: %-4d", readTemp());
-  snprintf(lcdBuffer[1], 16, "set temp: %-5d", getPotmeterTemp());
 
-  lcd.setCursor(0, 0);
-  lcd.print(lcdBuffer[0]);
-  lcd.setCursor(0, 1);
-  lcd.print(lcdBuffer[1]);
+  if(millis() > lcdRefreshTime) {
+    snprintf(lcdBuffer[0], 16, "cur. temp: %-3dC", readTemp());
+    snprintf(lcdBuffer[1], 16, "set temp: %-4dC", getPotmeterTemp());
+    
+    lcdRefreshTime = millis() + 500;
+    lcd.setCursor(0, 0);
+    lcd.print(lcdBuffer[0]);
+    lcd.setCursor(0, 1);
+    lcd.print(lcdBuffer[1]);
+  }
 
   delay(100);
 }
