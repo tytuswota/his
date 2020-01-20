@@ -60,8 +60,6 @@ void loop() {
     Serial.println("fan rpm: " + (String)toRpm(pulseTime) + " temperature: " + (String)readTemp() + " potmeter: " + (String)getPotmeterTemp());
   #endif
   
-  memset(lcdBuffer[0], ' ', 16);
-  memset(lcdBuffer[1], ' ', 16);
   snprintf(lcdBuffer[0], 16, "cur. temp: %-4d", readTemp());
   snprintf(lcdBuffer[1], 16, "set temp: %-5d", getPotmeterTemp());
 
