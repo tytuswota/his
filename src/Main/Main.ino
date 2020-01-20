@@ -10,7 +10,12 @@
 #define POTMETER_PIN A1
 #define FAN_OUT 5
 
-int getPotmeterTemp() {
+const float resistanceOnNtc = 10000;
+float logResistanceOfNtc,resistanceOfNtc, kelvin, celsius;
+float A = 1.009249522e-03, B = 2.378405444e-04, C = 2.019202697e-07;
+int ntcVout;
+
+unsigned int getPotmeterTemp() {
   // TO DO: calibrate
   return analogRead(POTMETER_PIN) / 10;
 }
@@ -36,6 +41,24 @@ int readTemp() {
   return temp;
 }
 
+
+int readNtcTemp(){
+  ntcVout = analogRead(TEMPSENSOR_PIN);
+  resistanceOfNtc = resistanceOnNtc * (1023.0 / (float)ntcVout - 1.0);
+  Serial.println(resistanceOfNtc);
+  logResistanceOfNtc = log(resistanceOfNtc);
+  //Steinhart–Hart equation
+  //1/T = A + B*ln(R2) + C(ln(R2))^3
+  
+  kelvin = (1.0 / (A + B*logResistanceOfNtc + C*logResistanceOfNtc*logResistanceOfNtc*logResistanceOfNtc));//in kelvin
+  celsius = kelvin - 273.15;//naar celsius
+  int val = celsius;
+  delay(500);
+  return val;  
+}
+
+unsigned long pulseTime;
+unsigned long lastInterrupt;
 unsigned long pulseTime, lastInterrupt, lcdRefreshTime = 0;
 bool shouldCool;
 char lcdBuffer[2][16];
@@ -68,7 +91,7 @@ void loop() {
   digitalWrite(FAN_OUT, shouldCool);
 
   #ifdef DEBUG
-    Serial.println("fan rpm: " + (String)toRpm(pulseTime) + " temperature: " + (String)readTemp() + " potmeter: " + (String)getPotmeterTemp());
+    Serial.println("fan rpm: " + (String)toRpm(pulseTime) + " temperature: " + (String)readNtcTemp() + " potmeter: " + (String)getPotmeterTemp());
   #endif
 
   if(millis() > lcdRefreshTime) {
