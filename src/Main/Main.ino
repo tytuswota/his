@@ -10,11 +10,6 @@
 #define POTMETER_PIN A1
 #define FAN_OUT 5
 
-const float resistanceOnNtc = 10000;
-float logResistanceOfNtc,resistanceOfNtc, kelvin, celsius;
-float A = 1.009249522e-03, B = 2.378405444e-04, C = 2.019202697e-07;
-int ntcVout;
-
 unsigned int getPotmeterTemp() {
   // TO DO: calibrate
   return analogRead(POTMETER_PIN) / 10;
@@ -25,6 +20,21 @@ unsigned long toRpm(unsigned long pulseTime) {
   return 60000/(pulseTime*0.002);
 }
 
+int readNtcTemp(int ntcVout){
+  
+  const float resistanceOnNtc = 10000;
+  float logResistanceOfNtc,resistanceOfNtc, kelvin, celsius;
+  const float A = 1.009249522e-03, B = 2.378405444e-04, C = 2.019202697e-07;
+  resistanceOfNtc = resistanceOnNtc * (1023.0 / (float)ntcVout - 1.0);
+  logResistanceOfNtc = log(resistanceOfNtc);
+  //Steinhart–Hart equation
+  //1/T = A + B*ln(R2) + C(ln(R2))^3
+  
+  kelvin = (1.0 / (A + B*logResistanceOfNtc + C*logResistanceOfNtc*logResistanceOfNtc*logResistanceOfNtc));//in kelvin
+  celsius = kelvin - 273.15;//naar celsius
+  return celsius;
+}
+
 int readTemp() {
   int temp;
   digitalWrite(TEMPSENSOR_VCC, 1);
@@ -33,34 +43,15 @@ int readTemp() {
   #ifdef LM35DZ
     // in = 0 - 1023        V = in / (1023 / 5)      mV = V * 1000       deg = mV / 10
     // deg = read/2.046
-    temp = analogRead(A0) / 2.046;
+    temp = analogRead(TEMPSENSOR_PIN) / 2.046;
   #else
-    temp = analogRead(A0);
+    temp = readNtcTemp(analogRead(TEMPSENSOR_PIN));
   #endif
   digitalWrite(TEMPSENSOR_VCC, 0);
   return temp;
 }
 
-
-int readNtcTemp(){
-  ntcVout = analogRead(TEMPSENSOR_PIN);
-  resistanceOfNtc = resistanceOnNtc * (1023.0 / (float)ntcVout - 1.0);
-  Serial.println(resistanceOfNtc);
-  logResistanceOfNtc = log(resistanceOfNtc);
-  //Steinhart–Hart equation
-  //1/T = A + B*ln(R2) + C(ln(R2))^3
-  
-  kelvin = (1.0 / (A + B*logResistanceOfNtc + C*logResistanceOfNtc*logResistanceOfNtc*logResistanceOfNtc));//in kelvin
-  celsius = kelvin - 273.15;//naar celsius
-  int val = celsius;
-  delay(500);
-  return val;  
-}
-
-unsigned long pulseTime;
-unsigned long lastInterrupt;
 unsigned long pulseTime, lastInterrupt, lcdRefreshTime = 0;
-bool shouldCool;
 char lcdBuffer[2][16];
 LiquidCrystal_I2C lcd(0x38, 16, 2);
 
@@ -86,12 +77,10 @@ void setup() {
 void loop() {
   if(lastInterrupt + 1000 < millis()) pulseTime = 0;
 
-  shouldCool = (readTemp() > getPotmeterTemp());
-    
-  digitalWrite(FAN_OUT, shouldCool);
+  digitalWrite(FAN_OUT, (readTemp() > getPotmeterTemp()));
 
   #ifdef DEBUG
-    Serial.println("fan rpm: " + (String)toRpm(pulseTime) + " temperature: " + (String)readNtcTemp() + " potmeter: " + (String)getPotmeterTemp());
+    Serial.println("fan rpm: " + (String)toRpm(pulseTime) + " temperature: " + (String)readTemp() + " potmeter: " + (String)getPotmeterTemp());
   #endif
 
   if(millis() > lcdRefreshTime) {
