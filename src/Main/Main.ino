@@ -7,6 +7,7 @@
 #define TEMPSENSOR_PIN A0
 #define TEMPSENSOR_VCC 4
 #define POTMETER_PIN A1
+#define FAN_OUT 5
 
 const float resistanceOnNtc = 10000;
 float logResistanceOfNtc,resistanceOfNtc, kelvin, celsius;
@@ -15,7 +16,7 @@ int ntcVout;
 
 unsigned int getPotmeterTemp() {
   // TO DO: calibrate
-  return analogRead(POTMETER_PIN);
+  return analogRead(POTMETER_PIN) / 10;
 }
 
 unsigned long toRpm(unsigned long pulseTime) {
@@ -35,6 +36,7 @@ int readTemp() {
   return temp;
 }
 
+
 int readNtcTemp(){
   ntcVout = analogRead(TEMPSENSOR_PIN);
   resistanceOfNtc = resistanceOnNtc * (1023.0 / (float)ntcVout - 1.0);
@@ -52,6 +54,8 @@ int readNtcTemp(){
 
 unsigned long pulseTime;
 unsigned long lastInterrupt;
+unsigned long pulseTime, lastInterrupt, lcdRefreshTime = 0;
+bool shouldCool;
 char lcdBuffer[2][16];
 LiquidCrystal_I2C lcd(0x38, 16, 2);
 
@@ -67,6 +71,7 @@ void setup() {
   pinMode(TEMPSENSOR_VCC, OUTPUT);
   pinMode(FAN_PIN, INPUT_PULLUP);
   pinMode(POTMETER_PIN, INPUT);
+  pinMode(FAN_OUT, OUTPUT);
   
   attachInterrupt(digitalPinToInterrupt(FAN_PIN), isr, CHANGE);
   Serial.begin(9600);
@@ -76,17 +81,22 @@ void setup() {
 void loop() {
   if(lastInterrupt + 1000 < millis()) pulseTime = 0;
 
+  shouldCool = (readTemp() > getPotmeterTemp());
+    
+  digitalWrite(FAN_OUT, shouldCool);
+
   #ifdef DEBUG
     Serial.println("fan rpm: " + (String)toRpm(pulseTime) + " temperature: " + (String)readNtcTemp() + " potmeter: " + (String)getPotmeterTemp());
   #endif
-  /*
-  snprintf(lcdBuffer[0], 16, "cur. temp: %-4d", readNtcTemp());
-  snprintf(lcdBuffer[1], 16, "set temp: %-5d", getPotmeterTemp());
 
-  lcd.setCursor(0, 0);
-  lcd.print(lcdBuffer[0]);
-  lcd.setCursor(0, 1);
-  lcd.print(lcdBuffer[1]);
-
-  delay(100);*/
+  if(millis() > lcdRefreshTime) {
+    snprintf(lcdBuffer[0], 16, "cur. temp: %-3dC", readTemp());
+    snprintf(lcdBuffer[1], 16, "set temp: %-4dC", getPotmeterTemp());
+    
+    lcdRefreshTime += 1000;
+    lcd.setCursor(0, 0);
+    lcd.print(lcdBuffer[0]);
+    lcd.setCursor(0, 1);
+    lcd.print(lcdBuffer[1]);
+  }
 }
