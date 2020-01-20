@@ -2,6 +2,7 @@
 #include <LiquidCrystal_I2C.h>
 
 #define DEBUG
+#define NTC
 
 #define FAN_PIN 2
 #define TEMPSENSOR_PIN A0
@@ -24,9 +25,13 @@ int readTemp() {
   digitalWrite(TEMPSENSOR_VCC, 1);
   delay(5);
 
-  // in = 0 - 1023        V = in / (1023 / 5)      mV = V * 1000       deg = mV / 10
-  // deg = read/2.046
-  temp = analogRead(A0) / 2.046;
+  #ifdef LM35DZ
+    // in = 0 - 1023        V = in / (1023 / 5)      mV = V * 1000       deg = mV / 10
+    // deg = read/2.046
+    temp = analogRead(A0) / 2.046;
+  #else
+    temp = analogRead(A0);
+  #endif
   digitalWrite(TEMPSENSOR_VCC, 0);
   return temp;
 }
