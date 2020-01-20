@@ -1,4 +1,4 @@
-void toDeg(float r) {
+float toDeg(float r) {
   // read = 0 - 1023
   // V = read / (1023 / 5)
   // mV = V * 1000

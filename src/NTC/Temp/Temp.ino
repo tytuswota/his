@@ -1,5 +1,5 @@
 #define NTCPin A0
-const int vout;
+int vout;
 //als er een weerstand van 100k wordt aangesloten
 //moet r1 10000 zijn als je een weerstand van 15k neemt
 //moet r1 gedeelt door 10 anders komen er rare waardes uit
@@ -28,7 +28,7 @@ void loop() {
   Serial.print("Resistance R2: "); 
   Serial.print(R2);
   Serial.print(" C: ");
-  Serial.print(Tc);
+  Serial.println(Tc);
   
   delay(500);
 }
