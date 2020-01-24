@@ -1,0 +1,7 @@
+Ontwerpbeschrijving case study
+Don Luijendijk, Charlie de Raaf, Tymek Pisko
+
+Voor de case study gaan we een koeler maken met feedback van een temperatuursensor. De koeler kan met een potmeter op een bepaalde temperatuur ingesteld worden en zal koelen als de gewenste temperatuur onder de gemeten temperatuur zit.
+
+Als temperatuursensor gebruiken we een NTC-weerstand die standaard 10 kOhm weerstand heeft. De kalibratie hiervan is beschreven in de excel-sheet en het bijbehordende document. Er wordt een oude ventilator van een computer gebruikt die via een transistor stroom krijgt, waardoor de ventilator meer stroom kan krijgen dan de Arduino via de digitale pins kan leveren. 
+Op de behuizing komt een LCD waarop de gebruiker de huidige temperatuur en de ingestelde temperatuur kan zien.
